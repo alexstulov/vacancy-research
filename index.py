@@ -4,8 +4,11 @@ import time
 import os
 import math
 import pandas as pd
+from datetime import datetime
 
 REQUEST_PAUSE = 0.2 # experimental pause not to bump into requests/minute limit
+
+log_file = open('aggregation_errors.log','w+')
 
 class VacancyAggregator:
     baseUrl = 'https://api.hh.ru/vacancies/'
@@ -40,15 +43,18 @@ class VacancyAggregator:
     def getVacancy(self, url):
         data = dict()
         try:
+            1/0
             response = requests.get(url)
             data = response.json()
             if response.status_code == 200:
                 print('ok', url)
             else:
                 print('not ok', response.status_code, url)
+                log_file.write(f'non-200 status code: {response.status_code}, url: {url}, time: {datetime.now()}\n')
             response.close()
         except Exception as exc:
             print(f'{url} made exception: {exc}')
+            log_file.write(f'something went wrong: {exc}, url: {url}, time: {datetime.now()}\n')
         return data
     
     def getVacancies(self, url):
@@ -59,11 +65,13 @@ class VacancyAggregator:
             data = response.json()
         except Exception as exc:
             print(f'{url} made exception: {exc}')
+            log_file.write(f'something went wrong: {exc}, url: {url}, time: {datetime.now()}\n')
         if (math.isinf(self.totalPages)):
             self.totalPages = data['pages']
         if 'items' not in data:
             print(url, ' failed to load data')
             response.close()
+            log_file.write(f'no required items found in response, url: {url}, time: {datetime.now()}\n')
             return    
         for item in data['items']:
             time.sleep(REQUEST_PAUSE)
@@ -72,7 +80,7 @@ class VacancyAggregator:
             self.vacancies[item['id']] = newVacancy
         response.close()
         
-    def prepareVacancy (self, vacancyId, vacancy):
+    def prepareVacancy(self, vacancyId, vacancy):
         if vacancy['salary'] != None:
             salary_from = vacancy['salary']['from']
             salary_to = vacancy['salary']['to']
@@ -190,24 +198,3 @@ class VacancyAggregator:
             }))
         for url in urls:
             self.getVacancies(url)
-
-
-vp = VacancyAggregator()
-vp.aggregateInfo()
-vp.saveToXlsx()
-
-# vp = VacancyAggregator(134)
-# vp.aggregateInfo()
-# vp.saveToXlsx()
-
-# vp = VacancyAggregator(156)
-# vp.aggregateInfo()
-# vp.saveToXlsx()
-
-# vp = VacancyAggregator(163)
-# vp.aggregateInfo()
-# vp.saveToXlsx()
-
-# vp = VacancyAggregator(164)
-# vp.aggregateInfo()
-# vp.saveToXlsx()
