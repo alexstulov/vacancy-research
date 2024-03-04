@@ -43,7 +43,6 @@ class VacancyAggregator:
     def getVacancy(self, url):
         data = dict()
         try:
-            1/0
             response = requests.get(url)
             data = response.json()
             if response.status_code == 200:
@@ -178,7 +177,7 @@ class VacancyAggregator:
                 'accept_temporary'
             ]
         )
-        vacanciesDF.to_excel(f'./vacancies/vacancies-{self.professional_role}.xlsx')
+        vacanciesDF.to_excel(f'./data/vacancies-{self.professional_role}.xlsx')
     
     def aggregateInfo(self):
         # get totalPages with first request
